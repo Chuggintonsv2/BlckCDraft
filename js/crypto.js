@@ -3,12 +3,37 @@
  */
 const CryptoUtils = {
     /**
+     * Implementation of hex encoding since nacl.util doesn't provide encodeBase16
+     * @param {Uint8Array} bytes - Byte array to convert to hex
+     * @returns {string} - Hex string
+     */
+    bytesToHex(bytes) {
+        return Array.from(bytes)
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+    },
+    
+    /**
+     * Implementation of hex decoding since nacl.util doesn't provide decodeBase16
+     * @param {string} hexString - Hex string to convert to byte array
+     * @returns {Uint8Array} - Resulting byte array
+     */
+    hexToBytes(hexString) {
+        const str = hexString.toLowerCase();
+        const bytes = new Uint8Array(str.length / 2);
+        for (let i = 0; i < bytes.length; i++) {
+            bytes[i] = parseInt(str.substr(i * 2, 2), 16);
+        }
+        return bytes;
+    },
+
+    /**
      * Convert a hex string to Uint8Array
      * @param {string} hexString - Hex string to convert
      * @returns {Uint8Array} - Resulting byte array
      */
     hexToUint8Array(hexString) {
-        return nacl.util.decodeBase16(hexString.toLowerCase());
+        return this.hexToBytes(hexString);
     },
 
     /**
@@ -17,7 +42,7 @@ const CryptoUtils = {
      * @returns {string} - Hex string
      */
     uint8ArrayToHex(bytes) {
-        return nacl.util.encodeBase16(bytes).toLowerCase();
+        return this.bytesToHex(bytes);
     },
 
     /**

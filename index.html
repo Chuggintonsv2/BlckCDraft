@@ -32,12 +32,7 @@
             border-left: 4px solid #ffc107;
         }
         .prod-notice {
-            background-color: #d1e7dd;
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            border-left: 4px solid #198754;
-            display: none;
+            display: none;  /* Hide this notice */
         }
     </style>
 </head>
@@ -57,11 +52,8 @@
                                To deploy the actual contract and switch to production mode, follow the instructions in the <a href="https://github.com/Chuggintonsv2/BlckCDraft" target="_blank">GitHub repository</a>.</p>
                         </div>
                         
-                        <!-- Production Notice -->
-                        <div class="prod-notice">
-                            <h5 class="text-success mb-2">✅ Production Mode</h5>
-                            <p class="mb-0">This application is running in production mode with a real smart contract. Messages are encrypted and sent to the blockchain.</p>
-                        </div>
+                        <!-- Production Notice - Hidden -->
+                        <div class="prod-notice"></div>
 
                         <div id="walletSection">
                             <div class="d-flex justify-content-between align-items-center mb-3">

@@ -166,14 +166,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Update UI to show correct mode notice
             const demoNotice = document.querySelector('.demo-notice');
-            const prodNotice = document.querySelector('.prod-notice');
             
             if (this.demoMode) {
                 demoNotice.style.display = 'block';
-                prodNotice.style.display = 'none';
             } else {
                 demoNotice.style.display = 'none';
-                prodNotice.style.display = 'block';
             }
         },
         
@@ -337,14 +334,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Generate a key pair for the current session
                 // In a real app, you might want to persistently store this
-                this.keyPair = CryptoUtils.generateKeyPair();
-                console.log("Generated key pair for current session");
+                try {
+                    console.log("Generating key pair...");
+                    // Test if cryptography functions are working
+                    if (typeof nacl === 'undefined') {
+                        throw new Error("TweetNaCl library is not loaded properly");
+                    }
+                    
+                    if (typeof nacl.box === 'undefined') {
+                        throw new Error("TweetNaCl box functionality is not available");
+                    }
+                    
+                    if (typeof nacl.box.keyPair !== 'function') {
+                        throw new Error("TweetNaCl keyPair function is not available");
+                    }
+                    
+                    // Check if custom hex functions work
+                    const testBytes = new Uint8Array([1, 2, 3, 4]);
+                    const testHex = CryptoUtils.uint8ArrayToHex(testBytes);
+                    console.log("Hex encoding test:", testHex);
+                    
+                    this.keyPair = CryptoUtils.generateKeyPair();
+                    console.log("Generated key pair for current session");
+                } catch (cryptoError) {
+                    console.error("Cryptography error:", cryptoError);
+                    this.showError("Crypto Error", "Failed to initialize encryption. Error: " + cryptoError.message);
+                    throw cryptoError;
+                }
                 
                 // Start listening for messages
                 this.startListeningForMessages();
             } catch (error) {
                 console.error("Setup error:", error);
-                this.showError("Setup Failed", "Failed to set up contract connection");
+                this.showError("Setup Failed", "Failed to set up contract connection: " + error.message);
+                throw error;
             }
         },
         
