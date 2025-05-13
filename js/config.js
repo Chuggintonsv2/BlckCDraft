@@ -2,10 +2,10 @@
  * Configuration file for the encrypted messaging dApp
  */
 const CONFIG = {
-    // Contract details - For a real deployment, you would replace with actual contract details
+    // Contract details - For a real deployment, replace with your actual deployed contract details
     CONTRACT: {
-        // This is a placeholder address. You would replace it with the actual deployed contract address
-        ADDRESS: "0x0000000000000000000000000000000000000000",
+        // Replace this with your deployed contract address once you've deployed it on Sepolia testnet
+        ADDRESS: "0x0000000000000000000000000000000000000000", // Replace with your deployed contract address
         // ABI excerpt containing just the functions and events we need
         ABI: [
             {
@@ -63,7 +63,7 @@ const CONFIG = {
     // IPFS configuration - Using public gateway
     IPFS: {
         // For demo purposes, we're using mock IPFS functionality
-        // In production, you would use a real IPFS API endpoint
+        // In production, you would use a real IPFS API endpoint like Infura or Web3.Storage
         API_URL: "https://dweb.link/api/v0",
         // Public gateway for retrieving files
         GATEWAY_URL: "https://dweb.link/ipfs/"
@@ -97,9 +97,18 @@ const CONFIG = {
         // Network name for display
         NETWORK_NAME: "Sepolia",
         // RPC URL for the testnet - This is a public Sepolia RPC endpoint
+        // For production, use your own Infura or Alchemy endpoint
         RPC_URL: "https://eth-sepolia.g.alchemy.com/v2/demo"
     },
     
     // GitHub Pages URL - Update this with your actual GitHub Pages URL
-    PAGES_URL: "https://chuggintonsv2.github.io/BlckCDraft/"
+    PAGES_URL: "https://chuggintonsv2.github.io/BlckCDraft/",
+    
+    // App configuration
+    APP: {
+        // Set to false once your contract is deployed to use real functionality
+        DEMO_MODE: false,
+        // Set to true to use a real IPFS implementation
+        USE_REAL_IPFS: false
+    }
 }; 

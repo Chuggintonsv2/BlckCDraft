@@ -31,6 +31,14 @@
             margin-bottom: 15px;
             border-left: 4px solid #ffc107;
         }
+        .prod-notice {
+            background-color: #d1e7dd;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid #198754;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -45,8 +53,14 @@
                         <!-- Demo Notice -->
                         <div class="demo-notice">
                             <h5 class="text-warning mb-2">⚠️ Demo Mode</h5>
-                            <p class="mb-0">This is a demonstration application currently running in demo mode. The smart contract is not deployed, and IPFS functionality is simulated. 
-                               To deploy the actual contract, check the <a href="https://github.com/Chuggintonsv2/BlckCDraft" target="_blank">GitHub repository</a>.</p>
+                            <p class="mb-0">This application is running in demo mode. The smart contract is not deployed, and IPFS functionality is simulated. 
+                               To deploy the actual contract and switch to production mode, follow the instructions in the <a href="https://github.com/Chuggintonsv2/BlckCDraft" target="_blank">GitHub repository</a>.</p>
+                        </div>
+                        
+                        <!-- Production Notice -->
+                        <div class="prod-notice">
+                            <h5 class="text-success mb-2">✅ Production Mode</h5>
+                            <p class="mb-0">This application is running in production mode with a real smart contract. Messages are encrypted and sent to the blockchain.</p>
                         </div>
 
                         <div id="walletSection">

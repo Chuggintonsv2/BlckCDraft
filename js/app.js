@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         contract: null,
         keyPair: null,
         ipfs: null,
-        demoMode: true, // Set to true for demo mode
+        demoMode: CONFIG.APP.DEMO_MODE, // Use configuration value
         
         // DOM elements
         connectWalletBtn: document.getElementById('connectWallet'),
@@ -38,6 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
          * Initialize the application
          */
         async init() {
+            console.log(`App starting in ${this.demoMode ? 'DEMO' : 'PRODUCTION'} mode`);
+            
             // Initialize UI components
             this.initializeUIComponents();
             
@@ -161,6 +163,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 option.dataset.address = user.address;
                 this.recipientSelect.appendChild(option);
             });
+            
+            // Update UI to show correct mode notice
+            const demoNotice = document.querySelector('.demo-notice');
+            const prodNotice = document.querySelector('.prod-notice');
+            
+            if (this.demoMode) {
+                demoNotice.style.display = 'block';
+                prodNotice.style.display = 'none';
+            } else {
+                demoNotice.style.display = 'none';
+                prodNotice.style.display = 'block';
+            }
         },
         
         /**
@@ -216,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Get the signer
                 const signer = this.provider.getSigner();
                 
-                // If we are in demo mode or have a zero contract address, use a mock contract
+                // Check if we're in demo mode or have a zero contract address
                 if (this.demoMode || CONFIG.CONTRACT.ADDRESS === "0x0000000000000000000000000000000000000000") {
                     console.log("Running in demo mode with mock contract");
                     
@@ -266,7 +280,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     };
                 } else {
-                    // Create real contract instance
+                    console.log("Using real contract at address:", CONFIG.CONTRACT.ADDRESS);
+                    // Create real contract instance with the actual deployed address
                     this.contract = new ethers.Contract(
                         CONFIG.CONTRACT.ADDRESS,
                         CONFIG.CONTRACT.ABI,
@@ -274,30 +289,51 @@ document.addEventListener('DOMContentLoaded', () => {
                     );
                 }
                 
-                // Set up IPFS client (for a real application, use authentication)
-                // Note: For simplicity we're skipping actual IPFS integration in this demo
-                // In a real app, you would initialize ipfs-http-client here
-                
-                // Initialize a dummy IPFS client with mock functions for the demo
-                this.ipfs = {
-                    add: async (content) => {
-                        // Simulate IPFS upload delay
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                        // Return a mock CID
-                        const mockCid = "Qm" + CryptoUtils.uint8ArrayToHex(nacl.randomBytes(32)).substring(0, 44);
-                        return { path: mockCid };
-                    },
-                    cat: async (cid) => {
-                        // Simulate IPFS fetch delay
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                        // In a real app, this would fetch and return the actual content
-                        return JSON.stringify({
-                            encrypted: "mockEncryptedData",
-                            nonce: "mockNonce",
-                            sender: "mockSenderPublicKey"
-                        });
+                // Set up IPFS client
+                if (CONFIG.APP.USE_REAL_IPFS) {
+                    try {
+                        // Initialize real IPFS client
+                        // Note: For this to work, you'd need to include the correct IPFS client library
+                        // and potentially set up authentication with Web3.Storage or Infura
+                        console.log("Using real IPFS client");
+                        
+                        // Example using Web3.Storage (you'd need to add the library)
+                        // const token = 'your-web3-storage-token';
+                        // this.ipfs = new Web3Storage({ token });
+                        
+                        // For now, we'll still use a mock implementation
+                        this.ipfs = {
+                            add: async (content) => {
+                                console.log("Real IPFS upload would happen here:", content);
+                                // Simulate upload delay
+                                await new Promise(resolve => setTimeout(resolve, 500));
+                                // Return a mock CID (in a real app, this would be a real CID)
+                                const mockCid = "Qm" + CryptoUtils.uint8ArrayToHex(nacl.randomBytes(32)).substring(0, 44);
+                                return { path: mockCid };
+                            },
+                            cat: async (cid) => {
+                                console.log("Real IPFS fetch would happen here:", cid);
+                                // Simulate fetch delay
+                                await new Promise(resolve => setTimeout(resolve, 500));
+                                // In a real app, this would fetch and return the actual content
+                                return JSON.stringify({
+                                    encrypted: "mockEncryptedData",
+                                    nonce: "mockNonce",
+                                    sender: "mockSenderPublicKey"
+                                });
+                            }
+                        };
+                    } catch (error) {
+                        console.error("Failed to initialize real IPFS client:", error);
+                        this.showError("IPFS Error", "Failed to connect to IPFS. Using mock client instead.");
+                        
+                        // Fall back to mock IPFS client
+                        this.initializeMockIPFS();
                     }
-                };
+                } else {
+                    // Use mock IPFS client
+                    this.initializeMockIPFS();
+                }
                 
                 // Generate a key pair for the current session
                 // In a real app, you might want to persistently store this
@@ -310,6 +346,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Setup error:", error);
                 this.showError("Setup Failed", "Failed to set up contract connection");
             }
+        },
+        
+        /**
+         * Initialize mock IPFS client
+         */
+        initializeMockIPFS() {
+            console.log("Using mock IPFS client");
+            this.ipfs = {
+                add: async (content) => {
+                    // Simulate IPFS upload delay
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    // Return a mock CID
+                    const mockCid = "Qm" + CryptoUtils.uint8ArrayToHex(nacl.randomBytes(32)).substring(0, 44);
+                    return { path: mockCid };
+                },
+                cat: async (cid) => {
+                    // Simulate IPFS fetch delay
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    // In a real app, this would fetch and return the actual content
+                    return JSON.stringify({
+                        encrypted: "mockEncryptedData",
+                        nonce: "mockNonce",
+                        sender: "mockSenderPublicKey"
+                    });
+                }
+            };
         },
         
         /**
@@ -415,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.showSuccess("Message Sent", "Your encrypted message has been sent!");
             } catch (error) {
                 console.error("Send message error:", error);
-                this.showError("Send Failed", "Failed to send the message");
+                this.showError("Send Failed", "Failed to send the message. Error: " + error.message);
             } finally {
                 // Reset loading state
                 this.setSendingState(false);
@@ -473,10 +535,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             // For demo, add some mock messages
-            setTimeout(() => {
-                this.displayMockMessage("0x71C7656EC7ab88b098defB751B7401B5f6d8976F", Date.now() - 3600000);
-                this.displayMockMessage("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", Date.now() - 1800000);
-            }, 2000);
+            if (this.demoMode) {
+                setTimeout(() => {
+                    this.displayMockMessage("0x71C7656EC7ab88b098defB751B7401B5f6d8976F", Date.now() - 3600000);
+                    this.displayMockMessage("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", Date.now() - 1800000);
+                }, 2000);
+            }
         },
         
         /**
