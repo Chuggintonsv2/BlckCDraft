@@ -1,8 +1,8 @@
 /**
- * Encrypted Messaging dApp - Main Application Logic
+ * messaging dapp - main application logic
  */
 document.addEventListener('DOMContentLoaded', () => {
-    // Check if TweetNaCl is properly loaded
+    // check tweetnacl
     if (typeof nacl === 'undefined') {
         alert('TweetNaCl library failed to load. Please check your internet connection and refresh the page.');
         console.error('TweetNaCl library not found');
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
-    // Test the hex encoding functions
+    // test hex encoding
     try {
         const testBytes = new Uint8Array([1, 2, 3, 4]);
         const testHex = nacl.util.encodeBase16(testBytes);
@@ -27,15 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     const App = {
-        // App state
+        // app state
         account: null,
         provider: null,
         contract: null,
         keyPair: null,
         ipfs: null,
-        demoMode: CONFIG.APP.DEMO_MODE, // Use configuration value
+        demoMode: CONFIG.APP.DEMO_MODE, // use config value
         
-        // DOM elements
+        // dom elements
         connectWalletBtn: document.getElementById('connectWallet'),
         connectionStatus: document.getElementById('connectionStatus'),
         userAddress: document.getElementById('userAddress'),
@@ -55,23 +55,23 @@ document.addEventListener('DOMContentLoaded', () => {
         toastTitle: document.getElementById('toastTitle'),
         toastMessage: document.getElementById('toastMessage'),
         
-        // Bootstrap toast instance
+        // bootstrap toast
         toast: null,
         
         /**
-         * Initialize the application
+         * initialize app
          */
         async init() {
             console.log(`App starting in ${this.demoMode ? 'DEMO' : 'PRODUCTION'} mode`);
             
-            // Initialize UI components
+            // init ui
             this.initializeUIComponents();
             
-            // Check if MetaMask is installed
+            // check metamask
             if (window.ethereum) {
                 this.provider = new ethers.providers.Web3Provider(window.ethereum);
                 
-                // Handle account changes
+                // handle account changes
                 window.ethereum.on('accountsChanged', (accounts) => {
                     if (accounts.length === 0) {
                         this.handleDisconnect();
@@ -81,12 +81,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 
-                // Handle chain changes
+                // handle chain changes
                 window.ethereum.on('chainChanged', () => {
                     window.location.reload();
                 });
                 
-                // Try to auto-connect
+                // try auto-connect
                 try {
                     const accounts = await this.provider.listAccounts();
                     if (accounts.length > 0) {
@@ -102,34 +102,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.showError("MetaMask Not Detected", "Please install MetaMask to use this dApp");
             }
             
-            // Add event listeners
+            // add event listeners
             this.addEventListeners();
         },
         
         /**
-         * Check if connected to the correct network and switch if needed
+         * check network and switch if needed
          */
         async checkNetwork() {
             try {
-                // Get the current chain ID
+                // get chain id
                 const chainId = await this.provider.getNetwork().then(network => network.chainId);
                 
-                // If not on the correct network, prompt to switch
+                // switch if needed
                 if (chainId !== CONFIG.NETWORK.CHAIN_ID) {
                     console.log(`Wrong network detected: ${chainId}. Switching to ${CONFIG.NETWORK.CHAIN_ID}`);
                     
                     try {
-                        // Try to switch to the required network
+                        // try switch
                         await window.ethereum.request({
                             method: 'wallet_switchEthereumChain',
                             params: [{ chainId: `0x${CONFIG.NETWORK.CHAIN_ID.toString(16)}` }],
                         });
                         
-                        // Refresh provider after network switch
+                        // refresh provider
                         this.provider = new ethers.providers.Web3Provider(window.ethereum);
                         return true;
                     } catch (switchError) {
-                        // This error code indicates that the chain has not been added to MetaMask
+                        // chain not added to metamask
                         if (switchError.code === 4902) {
                             try {
                                 await window.ethereum.request({
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     ],
                                 });
                                 
-                                // Refresh provider after network add
+                                // refresh provider
                                 this.provider = new ethers.providers.Web3Provider(window.ethereum);
                                 return true;
                             } catch (addError) {
@@ -173,13 +173,13 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         /**
-         * Initialize UI components
+         * init ui components
          */
         initializeUIComponents() {
-            // Initialize Bootstrap toast
+            // init toast
             this.toast = new bootstrap.Toast(this.statusToast);
             
-            // Initialize recipient dropdown
+            // init recipient dropdown
             CONFIG.USERS.forEach(user => {
                 const option = document.createElement('option');
                 option.value = user.publicKey;
@@ -190,18 +190,18 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         /**
-         * Add event listeners to UI elements
+         * add event listeners
          */
         addEventListeners() {
-            // Connect wallet button
+            // connect wallet button
             this.connectWalletBtn.addEventListener('click', this.connectWallet.bind(this));
             
-            // Send message form
+            // send message form
             this.sendMessageForm.addEventListener('submit', this.handleSendMessage.bind(this));
         },
         
         /**
-         * Connect to MetaMask wallet
+         * connect to metamask
          */
         async connectWallet() {
             if (!window.ethereum) {
@@ -210,23 +210,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             try {
-                // Request accounts from MetaMask
+                // request accounts
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 this.account = accounts[0];
                 
-                // Check if on the correct network and switch if needed
+                // check network
                 const networkChecked = await this.checkNetwork();
                 if (!networkChecked) {
                     return;
                 }
                 
-                // Setup contract connection
+                // setup contract
                 await this.setupContractConnection();
                 
-                // Update UI after successful login
+                // update ui
                 this.updateUIAfterLogin();
                 
-                // Show success message
+                // show success
                 this.showSuccess("Wallet Connected", "Successfully connected to MetaMask");
             } catch (error) {
                 console.error("Connection error:", error);
@@ -235,36 +235,36 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         /**
-         * Set up contract connection
+         * setup contract connection
          */
         async setupContractConnection() {
             try {
-                // Get the signer
+                // get signer
                 const signer = this.provider.getSigner();
                 
-                // Check if we should use the simulation mode (no real transactions)
+                // check simulation mode
                 if (CONFIG.APP.SIMULATION_MODE || !CONFIG.APP.USE_REAL_CONTRACT) {
                     console.log("Running in simulation mode - transactions will be simulated (no gas fees)");
                     
-                    // Create a simulated contract with the same interface
+                    // create simulation contract
                     this.contract = {
-                        // Real contract address for reference only - not actually used
+                        // reference only
                         address: CONFIG.CONTRACT.ADDRESS,
                         
-                        // Simulated function that doesn't actually submit transactions
+                        // simulated function
                         sendMessage: async (recipientHash, messageHash) => {
                             console.log("Simulation - sendMessage called with:", recipientHash, messageHash);
-                            // Simulate transaction delay
+                            // simulate delay
                             await new Promise(resolve => setTimeout(resolve, 800));
                             
-                            // Show user feedback that would normally be in MetaMask
+                            // user feedback
                             console.log("Simulation - transaction would cost gas but is being simulated");
                             
-                            // Return a simulated transaction object
+                            // simulated tx object
                             return {
                                 wait: async () => {
                                     console.log("Simulation - transaction confirmed (no gas spent)");
-                                    // Simulate event emission
+                                    // simulate event
                                     setTimeout(() => {
                                         if (typeof this.mockMessageEventCallback === 'function') {
                                             const event = {
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             };
                         },
                         
-                        // Listen for events
+                        // event listener
                         on: (eventName, callback) => {
                             console.log("Simulation - listening for event:", eventName);
                             if (eventName === "MessageSent") {
@@ -304,14 +304,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             };
                         },
                         
-                        // Mock queryFilter function for past events
+                        // mock query filter
                         queryFilter: async (filter, fromBlock, toBlock) => {
                             console.log("Simulation - queryFilter called:", filter);
-                            // Return empty array for simplicity
+                            // empty array
                             return [];
                         },
                         
-                        // Add other methods as needed
+                        // other methods
                         filters: {
                             MessageSent: (sender, recipientHash) => {
                                 return { sender, recipientHash };
@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
                 } else {
                     console.log("Using real contract at address:", CONFIG.CONTRACT.ADDRESS);
-                    // Create real contract instance with the actual deployed address
+                    // real contract instance
                     this.contract = new ethers.Contract(
                         CONFIG.CONTRACT.ADDRESS,
                         CONFIG.CONTRACT.ABI,
@@ -328,33 +328,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     );
                 }
                 
-                // Set up IPFS client
+                // setup ipfs
                 if (CONFIG.APP.USE_REAL_IPFS) {
                     try {
-                        // Initialize real IPFS client
-                        // Note: For this to work, you'd need to include the correct IPFS client library
-                        // and potentially set up authentication with Web3.Storage or Infura
+                        // init real ipfs
+                        // needs correct ipfs library
                         console.log("Using real IPFS client");
                         
-                        // Example using Web3.Storage (you'd need to add the library)
+                        // web3.storage example
                         // const token = 'your-web3-storage-token';
                         // this.ipfs = new Web3Storage({ token });
                         
-                        // For now, we'll still use a mock implementation
+                        // mock implementation
                         this.ipfs = {
                             add: async (content) => {
                                 console.log("Real IPFS upload would happen here:", content);
-                                // Simulate upload delay
+                                // simulate delay
                                 await new Promise(resolve => setTimeout(resolve, 500));
-                                // Return a mock CID (in a real app, this would be a real CID)
+                                // mock cid
                                 const mockCid = "Qm" + CryptoUtils.uint8ArrayToHex(nacl.randomBytes(32)).substring(0, 44);
                                 return { path: mockCid };
                             },
                             cat: async (cid) => {
                                 console.log("Real IPFS fetch would happen here:", cid);
-                                // Simulate fetch delay
+                                // simulate delay
                                 await new Promise(resolve => setTimeout(resolve, 500));
-                                // In a real app, this would fetch and return the actual content
+                                // mock content
                                 return JSON.stringify({
                                     encrypted: "mockEncryptedData",
                                     nonce: "mockNonce",
@@ -366,19 +365,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.error("Failed to initialize real IPFS client:", error);
                         this.showError("IPFS Error", "Failed to connect to IPFS. Using mock client instead.");
                         
-                        // Fall back to mock IPFS client
+                        // fallback
                         this.initializeMockIPFS();
                     }
                 } else {
-                    // Use mock IPFS client
+                    // use mock ipfs
                     this.initializeMockIPFS();
                 }
                 
-                // Generate a key pair for the current session
-                // In a real app, you might want to persistently store this
+                // generate keypair
+                // could be stored persistently
                 try {
                     console.log("Generating key pair...");
-                    // Test if cryptography functions are working
+                    // test crypto functions
                     if (typeof nacl === 'undefined') {
                         throw new Error("TweetNaCl library is not loaded properly");
                     }
@@ -391,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         throw new Error("TweetNaCl keyPair function is not available");
                     }
                     
-                    // Check if custom hex functions work
+                    // test hex functions
                     const testBytes = new Uint8Array([1, 2, 3, 4]);
                     const testHex = CryptoUtils.uint8ArrayToHex(testBytes);
                     console.log("Hex encoding test:", testHex);
@@ -404,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw cryptoError;
                 }
                 
-                // Start listening for messages
+                // start message listener
                 this.startListeningForMessages();
             } catch (error) {
                 console.error("Setup error:", error);
@@ -414,22 +413,22 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         /**
-         * Initialize mock IPFS client
+         * init mock ipfs
          */
         initializeMockIPFS() {
             console.log("Using mock IPFS client");
             this.ipfs = {
                 add: async (content) => {
-                    // Simulate IPFS upload delay
+                    // simulate delay
                     await new Promise(resolve => setTimeout(resolve, 500));
-                    // Return a mock CID
+                    // mock cid
                     const mockCid = "Qm" + CryptoUtils.uint8ArrayToHex(nacl.randomBytes(32)).substring(0, 44);
                     return { path: mockCid };
                 },
                 cat: async (cid) => {
-                    // Simulate IPFS fetch delay
+                    // simulate delay
                     await new Promise(resolve => setTimeout(resolve, 500));
-                    // In a real app, this would fetch and return the actual content
+                    // mock content
                     return JSON.stringify({
                         encrypted: "mockEncryptedData",
                         nonce: "mockNonce",
@@ -440,35 +439,35 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         /**
-         * Update UI after successful login
+         * update ui after login
          */
         updateUIAfterLogin() {
-            // Update connection status
+            // update status
             this.connectionStatus.textContent = "Connected";
             this.connectionStatus.classList.remove('bg-danger');
             this.connectionStatus.classList.add('bg-success');
             
-            // Update user address
+            // update address
             this.userAddress.textContent = this.account;
             
-            // Show send message and inbox cards
+            // show cards
             this.sendMessageCard.style.display = 'block';
             this.inboxCard.style.display = 'block';
             
-            // Update button text
+            // update button
             this.connectWalletBtn.textContent = "Connected";
             this.connectWalletBtn.disabled = true;
         },
         
         /**
-         * Handle disconnection
+         * handle disconnect
          */
         handleDisconnect() {
-            // Reset state
+            // reset state
             this.account = null;
             this.contract = null;
             
-            // Update UI
+            // update ui
             this.connectionStatus.textContent = "Not connected";
             this.connectionStatus.classList.remove('bg-success');
             this.connectionStatus.classList.add('bg-danger');
@@ -480,8 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         /**
-         * Handle sending a message
-         * @param {Event} event - Form submit event
+         * handle sending message
          */
         async handleSendMessage(event) {
             event.preventDefault();
@@ -495,24 +493,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             try {
-                // Show loading state
+                // show loading
                 this.setSendingState(true);
                 
-                // Get selected recipient
+                // get recipient
                 const selectedOption = this.recipientSelect.options[this.recipientSelect.selectedIndex];
                 const recipientAddress = selectedOption.dataset.address;
                 
-                // Generate recipient hash for privacy
+                // hash for privacy
                 const recipientHash = CryptoUtils.hashToBytes32(recipientAddress);
                 
-                // Encrypt the message using NaCl box
+                // encrypt message
                 const encryptedData = CryptoUtils.encryptMessage(
                     message,
-                    recipient, // recipient's public key
-                    this.keyPair.secretKey // sender's secret key
+                    recipient, // recipient public key
+                    this.keyPair.secretKey // sender secret key
                 );
                 
-                // Prepare message package
+                // prepare package
                 const messagePackage = {
                     encrypted: encryptedData.encrypted,
                     nonce: encryptedData.nonce,
@@ -520,17 +518,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     timestamp: Date.now()
                 };
                 
-                // Upload encrypted message to IPFS
+                // upload to ipfs
                 console.log("Uploading to IPFS...");
                 try {
                     const result = await this.ipfs.add(JSON.stringify(messagePackage));
                     const cid = result.path;
                     console.log("IPFS CID:", cid);
                     
-                    // Convert CID to bytes32 compatible format
+                    // convert to bytes32
                     const messageHash = CryptoUtils.hashToBytes32(cid);
                     
-                    // Record metadata in smart contract
+                    // record in contract
                     console.log("Sending transaction to blockchain...");
                     console.log("Contract address:", CONFIG.CONTRACT.ADDRESS);
                     console.log("Recipient hash:", recipientHash);
@@ -540,11 +538,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         const tx = await this.contract.sendMessage(recipientHash, messageHash);
                         console.log("Transaction submitted:", tx);
                         
-                        // Wait for transaction to be mined
+                        // wait for confirmation
                         const receipt = await tx.wait();
                         console.log("Transaction confirmed:", receipt);
                         
-                        // Clear the form and show success message
+                        // clear form and show success
                         this.messageInput.value = "";
                         this.showSuccess("Message Sent", "Your encrypted message has been sent!");
                     } catch (txError) {
@@ -569,14 +567,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Send message error:", error);
                 this.showError("Send Failed", "Failed to send the message: " + error.message);
             } finally {
-                // Reset loading state
+                // reset loading
                 this.setSendingState(false);
             }
         },
         
         /**
-         * Set the sending state of the form
-         * @param {boolean} isSending - Whether message is being sent
+         * set sending state
          */
         setSendingState(isSending) {
             if (isSending) {
@@ -591,34 +588,34 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         /**
-         * Start listening for messages
+         * listen for messages
          */
         async startListeningForMessages() {
             if (!this.contract) return;
             
-            // Calculate the recipient hash for the current user
+            // calculate recipient hash
             const myRecipientHash = CryptoUtils.hashToBytes32(this.account);
             console.log("My recipient hash:", myRecipientHash);
             
-            // Hide loading and show no messages initially
+            // hide loading
             this.loadingMessages.style.display = 'none';
             this.noMessages.style.display = 'block';
             
             try {
-                // In a real application, fetch past events
+                // fetch past events in real app
                 if (!this.demoMode) {
                     console.log("Fetching past messages...");
                     try {
-                        // Query past MessageSent events where recipientHash matches the current user
+                        // query past events
                         const filter = this.contract.filters.MessageSent(null, myRecipientHash);
-                        const events = await this.contract.queryFilter(filter, -10000); // Look back 10000 blocks
+                        const events = await this.contract.queryFilter(filter, -10000); // 10000 blocks
                         
                         console.log(`Found ${events.length} past messages`);
                         
                         if (events.length > 0) {
                             this.noMessages.style.display = 'none';
                             
-                            // Process each event
+                            // process events
                             for (const event of events) {
                                 const { sender, messageHash, timestamp } = event.args;
                                 await this.processMessage(sender, messageHash, timestamp);
@@ -630,22 +627,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 
-                // Listen for new MessageSent events
+                // listen for new events
                 console.log("Listening for incoming messages...");
                 
                 this.contract.on("MessageSent", async (sender, recipientHash, messageHash, timestamp, event) => {
                     console.log("Message event detected:", sender, recipientHash, messageHash);
                     
-                    // Check if this message is for the current user
+                    // check for current user
                     if (recipientHash === myRecipientHash) {
                         console.log("New message for current user detected!");
                         
                         try {
                             if (this.demoMode) {
-                                // For demo purposes, display mock messages
+                                // display mock
                                 await this.displayMockMessage(sender, timestamp);
                             } else {
-                                // In production mode, process the real message
+                                // process real message
                                 await this.processMessage(sender, messageHash, timestamp);
                             }
                         } catch (error) {
@@ -654,7 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 
-                // For demo, add some mock messages
+                // add mock messages in demo
                 if (this.demoMode) {
                     setTimeout(() => {
                         this.displayMockMessage("0x71C7656EC7ab88b098defB751B7401B5f6d8976F", Date.now() - 3600000);
@@ -667,42 +664,38 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         /**
-         * Process a real message from the blockchain
-         * @param {string} sender - Sender address
-         * @param {string} messageHash - IPFS CID hash
-         * @param {number} timestamp - Message timestamp
+         * process message from blockchain
          */
         async processMessage(sender, messageHash, timestamp) {
             try {
-                // In a real implementation, we would:
-                // 1. Fetch the encrypted message from IPFS using the messageHash
-                // 2. Decrypt the message using the recipient's private key
+                // in real implementation:
+                // 1. fetch from ipfs
+                // 2. decrypt with private key
                 
-                // For this demo, we'll just show a placeholder
-                // Hide the "no messages" display if it's visible
+                // hide "no messages"
                 this.noMessages.style.display = 'none';
                 
-                // Find sender name from CONFIG
+                // find sender name
                 let senderName = "Unknown User";
                 const senderObj = CONFIG.USERS.find(user => user.address.toLowerCase() === sender.toLowerCase());
                 if (senderObj) {
                     senderName = senderObj.name;
                 }
                 
-                // Convert timestamp from BigNumber if needed
+                // convert timestamp
                 const timeValue = typeof timestamp === 'object' && timestamp.toNumber ? 
-                    timestamp.toNumber() * 1000 : // Convert from seconds to milliseconds
+                    timestamp.toNumber() * 1000 : // to milliseconds
                     Number(timestamp) * 1000;
                     
-                // Format the timestamp
+                // format timestamp
                 const date = new Date(timeValue);
                 const formattedDate = date.toLocaleString();
                 
-                // Create a message card
+                // create message card
                 const card = document.createElement('div');
                 card.className = 'card message-card';
                 
-                // Set the card content with real message data
+                // set content
                 card.innerHTML = `
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div>
@@ -718,7 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
                 
-                // Add the card to the messages list
+                // add to messages list
                 this.messagesList.prepend(card);
             } catch (error) {
                 console.error("Error processing message:", error);
@@ -726,30 +719,28 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         /**
-         * Display a mock message (for demo purposes)
-         * @param {string} sender - Sender address
-         * @param {number} timestamp - Message timestamp
+         * display mock message
          */
         async displayMockMessage(sender, timestamp) {
-            // Hide the "no messages" display if it's visible
+            // hide no messages
             this.noMessages.style.display = 'none';
             
-            // Find sender name from CONFIG
+            // find sender name
             let senderName = "Unknown User";
             const senderObj = CONFIG.USERS.find(user => user.address.toLowerCase() === sender.toLowerCase());
             if (senderObj) {
                 senderName = senderObj.name;
             }
             
-            // Create a message card
+            // create message card
             const card = document.createElement('div');
             card.className = 'card message-card';
             
-            // Format the timestamp
+            // format timestamp
             const date = new Date(timestamp);
             const formattedDate = date.toLocaleString();
             
-            // Set the card content
+            // set content
             card.innerHTML = `
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
@@ -763,14 +754,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             
-            // Add the card to the messages list
+            // add to messages list
             this.messagesList.prepend(card);
         },
         
         /**
-         * Show a success toast message
-         * @param {string} title - Toast title
-         * @param {string} message - Toast message
+         * show success toast
          */
         showSuccess(title, message) {
             this.toastTitle.textContent = title;
@@ -781,9 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         /**
-         * Show an error toast message
-         * @param {string} title - Toast title
-         * @param {string} message - Toast message
+         * show error toast
          */
         showError(title, message) {
             this.toastTitle.textContent = title;
@@ -794,6 +781,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // Initialize the application
+    // initialize app
     App.init();
 }); 

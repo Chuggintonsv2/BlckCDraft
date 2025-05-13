@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/// @title Message Logger Contract
-/// @notice A simple contract that logs encrypted message metadata
+/// @title message logger contract
+/// @notice simple contract that logs message metadata
 contract MessageLogger {
-    // Struct to represent message metadata
+    // message metadata struct
     struct MessageMeta {
         address sender;
         bytes32 recipientHash;
-        bytes32 messageHash; // IPFS CID hash
+        bytes32 messageHash; // ipfs cid hash
         uint256 timestamp;
     }
 
-    // Event emitted when a new message is sent
+    // event for new messages
     event MessageSent(
         address indexed sender, 
         bytes32 indexed recipientHash, 
@@ -21,9 +21,9 @@ contract MessageLogger {
     );
 
     /**
-     * @notice Logs a message metadata by emitting an event
-     * @param recipientHash The hashed public key/identifier of the recipient
-     * @param messageHash The IPFS CID hash of the encrypted message
+     * logs message metadata by emitting event
+     * @param recipientHash hashed identifier of recipient
+     * @param messageHash ipfs cid hash of encrypted message
      */
     function sendMessage(bytes32 recipientHash, bytes32 messageHash) public {
         emit MessageSent(

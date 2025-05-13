@@ -1,9 +1,8 @@
 /**
- * Crypto utilities for encryption and decryption using TweetNaCl
+ * crypto utilities for tweetnacl
  */
 
-// First, ensure nacl.util functions are available as a fallback
-// This is a safety measure in case the inline script in index.html doesn't load
+// fallback if inline script fails
 if (typeof nacl !== 'undefined') {
     if (!nacl.util) {
         nacl.util = {};
@@ -31,9 +30,7 @@ if (typeof nacl !== 'undefined') {
 
 const CryptoUtils = {
     /**
-     * Implementation of hex encoding since nacl.util doesn't provide encodeBase16
-     * @param {Uint8Array} bytes - Byte array to convert to hex
-     * @returns {string} - Hex string
+     * hex encoding since nacl.util lacks encodebase16
      */
     bytesToHex(bytes) {
         return Array.from(bytes)
@@ -42,9 +39,7 @@ const CryptoUtils = {
     },
     
     /**
-     * Implementation of hex decoding since nacl.util doesn't provide decodeBase16
-     * @param {string} hexString - Hex string to convert to byte array
-     * @returns {Uint8Array} - Resulting byte array
+     * hex decoding since nacl.util lacks decodebase16
      */
     hexToBytes(hexString) {
         const str = hexString.toLowerCase();
@@ -56,71 +51,60 @@ const CryptoUtils = {
     },
 
     /**
-     * Convert a hex string to Uint8Array
-     * @param {string} hexString - Hex string to convert
-     * @returns {Uint8Array} - Resulting byte array
+     * convert hex string to uint8array
      */
     hexToUint8Array(hexString) {
-        // First try to use nacl.util if available, otherwise use our implementation
+        // try nacl.util first, fallback to our implementation
         try {
             if (nacl.util && typeof nacl.util.decodeBase16 === 'function') {
                 return nacl.util.decodeBase16(hexString.toLowerCase());
             }
         } catch (e) {
-            console.log("Using fallback hex decoder");
+            console.log("using fallback hex decoder");
         }
         return this.hexToBytes(hexString);
     },
 
     /**
-     * Convert Uint8Array to hex string
-     * @param {Uint8Array} bytes - Byte array to convert
-     * @returns {string} - Hex string
+     * convert uint8array to hex string
      */
     uint8ArrayToHex(bytes) {
-        // First try to use nacl.util if available, otherwise use our implementation
+        // try nacl.util first, fallback to our implementation
         try {
             if (nacl.util && typeof nacl.util.encodeBase16 === 'function') {
                 return nacl.util.encodeBase16(bytes).toLowerCase();
             }
         } catch (e) {
-            console.log("Using fallback hex encoder");
+            console.log("using fallback hex encoder");
         }
         return this.bytesToHex(bytes);
     },
 
     /**
-     * Convert string to Uint8Array
-     * @param {string} str - String to convert
-     * @returns {Uint8Array} - Resulting byte array
+     * convert string to uint8array
      */
     strToUint8Array(str) {
         return nacl.util.decodeUTF8(str);
     },
 
     /**
-     * Convert Uint8Array to string
-     * @param {Uint8Array} bytes - Byte array to convert
-     * @returns {string} - Resulting string
+     * convert uint8array to string
      */
     uint8ArrayToStr(bytes) {
         return nacl.util.encodeUTF8(bytes);
     },
 
     /**
-     * Hash a string to a bytes32 compatible hex string
-     * @param {string} str - String to hash
-     * @returns {string} - Bytes32 compatible hex string
+     * hash a string to bytes32 format
      */
     hashToBytes32(str) {
-        // Using SHA-512 truncated to 32 bytes for simplicity (for actual deployment, consider using keccak256)
+        // sha-512 truncated to 32 bytes
         const hash = nacl.hash(this.strToUint8Array(str));
         return '0x' + this.uint8ArrayToHex(hash.slice(0, 32));
     },
 
     /**
-     * Generate a key pair for encryption/decryption
-     * @returns {Object} - Object containing publicKey and secretKey
+     * generate encryption keypair
      */
     generateKeyPair() {
         const keyPair = nacl.box.keyPair();
@@ -131,11 +115,7 @@ const CryptoUtils = {
     },
 
     /**
-     * Encrypt a message using the recipient's public key
-     * @param {string} message - Plain text message to encrypt
-     * @param {string} recipientPublicKeyHex - Recipient's public key in hex format
-     * @param {string} senderSecretKeyHex - Sender's secret key in hex format
-     * @returns {Object} - Encrypted message with nonce
+     * encrypt a message
      */
     encryptMessage(message, recipientPublicKeyHex, senderSecretKeyHex) {
         const messageUint8 = this.strToUint8Array(message);
@@ -157,12 +137,7 @@ const CryptoUtils = {
     },
 
     /**
-     * Decrypt a message using the recipient's secret key
-     * @param {string} encryptedHex - Encrypted message in hex format
-     * @param {string} nonceHex - Nonce used for encryption in hex format
-     * @param {string} senderPublicKeyHex - Sender's public key in hex format
-     * @param {string} recipientSecretKeyHex - Recipient's secret key in hex format
-     * @returns {string} - Decrypted message
+     * decrypt a message
      */
     decryptMessage(encryptedHex, nonceHex, senderPublicKeyHex, recipientSecretKeyHex) {
         const encryptedUint8 = this.hexToUint8Array(encryptedHex);

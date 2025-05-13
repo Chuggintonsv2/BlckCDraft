@@ -1,12 +1,12 @@
 /**
- * Configuration file for the encrypted messaging dApp
+ * config file for messaging dapp
  */
 const CONFIG = {
-    // Contract details - For a real deployment, replace with your actual deployed contract details
+    // contract details
     CONTRACT: {
-        // Your deployed contract address, used for reference but transactions will be simulated
-        ADDRESS: "0xd9145CCE52D386f254917e481eB44e9943F39138", // Deployed contract address
-        // ABI excerpt containing just the functions and events we need
+        // deployed contract address for reference
+        ADDRESS: "0xd9145CCE52D386f254917e481eB44e9943F39138", // deployed address
+        // abi with needed functions and events
         ABI: [
             {
                 "inputs": [
@@ -60,21 +60,19 @@ const CONFIG = {
         ]
     },
     
-    // IPFS configuration - Using public gateway
+    // ipfs config
     IPFS: {
-        // For demo purposes, we're using mock IPFS functionality
-        // In production, you would use a real IPFS API endpoint like Infura or Web3.Storage
+        // mock ipfs functionality
         API_URL: "https://dweb.link/api/v0",
-        // Public gateway for retrieving files
+        // public gateway for files
         GATEWAY_URL: "https://dweb.link/ipfs/"
     },
     
-    // Sample user public keys for the demo
-    // In a real application, these would be fetched from a registry or user directory
+    // sample user keys for demo
     USERS: [
         {
             name: "Alice",
-            // These are example NaCl public keys in hex format - generated for demo purposes only
+            // example nacl public keys
             publicKey: "8f40c5adb68f25624ee5170fa14c64a4b3c4ce08c14071d9091232e37e85e1d5",
             address: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"
         },
@@ -90,26 +88,26 @@ const CONFIG = {
         }
     ],
     
-    // Network configuration
+    // network config
     NETWORK: {
-        // Chain ID for Sepolia testnet
+        // chain id for sepolia testnet
         CHAIN_ID: 11155111,
-        // Network name for display
+        // network name for display
         NETWORK_NAME: "Sepolia",
-        // RPC URL for the testnet - This is a better public Sepolia RPC endpoint
+        // rpc url
         RPC_URL: "https://ethereum-sepolia.publicnode.com"
     },
     
-    // GitHub Pages URL - Update this with your actual GitHub Pages URL
+    // github pages url
     PAGES_URL: "https://chuggintonsv2.github.io/BlckCDraft/",
     
-    // App configuration
+    // app config
     APP: {
-        // Set to true to use zero-gas simulation
+        // use zero-gas simulation
         SIMULATION_MODE: true,
-        // Set to true to use the real deployed contract (costs gas)
+        // use real contract (costs gas)
         USE_REAL_CONTRACT: false,
-        // Set to true to use a real IPFS implementation
+        // use real ipfs
         USE_REAL_IPFS: false
     }
 }; 
