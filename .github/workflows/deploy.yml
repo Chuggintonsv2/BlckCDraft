@@ -4,15 +4,11 @@ on:
   push:
     branches:
       - main  # Set this to your default branch
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+  workflow_dispatch:  # Allow manual triggering
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 # Allow only one concurrent deployment
 concurrency:
@@ -27,16 +23,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
-      - name: Setup Pages
-        uses: actions/configure-pages@v3
-      
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          path: '.'
-      
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm ci
+        
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v2 
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          force_orphan: true 
