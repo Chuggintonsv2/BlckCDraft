@@ -1,0 +1,51 @@
+/**
+ * Sample Hardhat configuration file for MessageLogger contract deployment
+ * Replace placeholders with your actual values before using
+ */
+require("@nomiclabs/hardhat-waffle");
+require("dotenv").config();
+
+// This is a sample hardhat-config.js file.
+// You need to create a .env file with your own keys for a real deployment
+
+module.exports = {
+  solidity: "0.8.4",
+  networks: {
+    // Test network configuration
+    goerli: {
+      url: `https://goerli.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [process.env.PRIVATE_KEY]
+    },
+    sepolia: {
+      url: `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [process.env.PRIVATE_KEY]
+    },
+    // Mainnet configuration
+    mainnet: {
+      url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [process.env.PRIVATE_KEY]
+    }
+  },
+  // Etherscan verification configuration
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY
+  },
+  // Configure path to the contract
+  paths: {
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache",
+    artifacts: "./artifacts"
+  }
+};
+
+/**
+ * To use this configuration:
+ * 1. Rename to hardhat.config.js
+ * 2. Create a .env file with:
+ *    - INFURA_API_KEY=your_infura_api_key
+ *    - PRIVATE_KEY=your_wallet_private_key_for_deployment
+ *    - ETHERSCAN_API_KEY=your_etherscan_api_key_for_verification
+ * 3. Install dependencies:
+ *    - npm install --save-dev @nomiclabs/hardhat-waffle @nomiclabs/hardhat-ethers ethers hardhat @nomiclabs/hardhat-etherscan dotenv
+ */ 
