@@ -242,20 +242,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Get the signer
                 const signer = this.provider.getSigner();
                 
-                // Check if we're in demo mode or have a zero contract address
-                if (this.demoMode || CONFIG.CONTRACT.ADDRESS === "0x0000000000000000000000000000000000000000") {
-                    console.log("Running in demo mode with mock contract");
+                // Check if we should use the simulation mode (no real transactions)
+                if (CONFIG.APP.SIMULATION_MODE || !CONFIG.APP.USE_REAL_CONTRACT) {
+                    console.log("Running in simulation mode - transactions will be simulated (no gas fees)");
                     
-                    // Create a mock contract with the same interface
+                    // Create a simulated contract with the same interface
                     this.contract = {
+                        // Real contract address for reference only - not actually used
+                        address: CONFIG.CONTRACT.ADDRESS,
+                        
+                        // Simulated function that doesn't actually submit transactions
                         sendMessage: async (recipientHash, messageHash) => {
-                            console.log("Mock contract - sendMessage called with:", recipientHash, messageHash);
+                            console.log("Simulation - sendMessage called with:", recipientHash, messageHash);
                             // Simulate transaction delay
-                            await new Promise(resolve => setTimeout(resolve, 1000));
-                            // Return a mock transaction object
+                            await new Promise(resolve => setTimeout(resolve, 800));
+                            
+                            // Show user feedback that would normally be in MetaMask
+                            console.log("Simulation - transaction would cost gas but is being simulated");
+                            
+                            // Return a simulated transaction object
                             return {
                                 wait: async () => {
-                                    console.log("Mock transaction confirmed");
+                                    console.log("Simulation - transaction confirmed (no gas spent)");
                                     // Simulate event emission
                                     setTimeout(() => {
                                         if (typeof this.mockMessageEventCallback === 'function') {
@@ -273,22 +281,41 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 event
                                             );
                                         }
-                                    }, 1500);
-                                    return { hash: "0x" + Array(64).fill("0").join("") };
+                                    }, 1000);
+                                    return { 
+                                        hash: "0xsimulated" + Array(56).fill("0").join(""),
+                                        wait: () => Promise.resolve(true)
+                                    };
                                 }
                             };
                         },
+                        
+                        // Listen for events
                         on: (eventName, callback) => {
-                            console.log("Mock contract - listening for event:", eventName);
+                            console.log("Simulation - listening for event:", eventName);
                             if (eventName === "MessageSent") {
                                 this.mockMessageEventCallback = callback;
                             }
                             return {
                                 removeAllListeners: () => {
-                                    console.log("Mock contract - removed event listeners");
+                                    console.log("Simulation - removed event listeners");
                                     this.mockMessageEventCallback = null;
                                 }
                             };
+                        },
+                        
+                        // Mock queryFilter function for past events
+                        queryFilter: async (filter, fromBlock, toBlock) => {
+                            console.log("Simulation - queryFilter called:", filter);
+                            // Return empty array for simplicity
+                            return [];
+                        },
+                        
+                        // Add other methods as needed
+                        filters: {
+                            MessageSent: (sender, recipientHash) => {
+                                return { sender, recipientHash };
+                            }
                         }
                     };
                 } else {

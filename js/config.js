@@ -4,7 +4,7 @@
 const CONFIG = {
     // Contract details - For a real deployment, replace with your actual deployed contract details
     CONTRACT: {
-        // Replace this with your deployed contract address once you've deployed it on Sepolia testnet
+        // Your deployed contract address, used for reference but transactions will be simulated
         ADDRESS: "0xd9145CCE52D386f254917e481eB44e9943F39138", // Deployed contract address
         // ABI excerpt containing just the functions and events we need
         ABI: [
@@ -105,8 +105,10 @@ const CONFIG = {
     
     // App configuration
     APP: {
-        // Set to false to use the real deployed contract
-        DEMO_MODE: false,
+        // Set to true to use zero-gas simulation
+        SIMULATION_MODE: true,
+        // Set to true to use the real deployed contract (costs gas)
+        USE_REAL_CONTRACT: false,
         // Set to true to use a real IPFS implementation
         USE_REAL_IPFS: false
     }
