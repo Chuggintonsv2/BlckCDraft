@@ -457,27 +457,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Upload encrypted message to IPFS
                 console.log("Uploading to IPFS...");
-                const result = await this.ipfs.add(JSON.stringify(messagePackage));
-                const cid = result.path;
-                console.log("IPFS CID:", cid);
-                
-                // Convert CID to bytes32 compatible format
-                const messageHash = CryptoUtils.hashToBytes32(cid);
-                
-                // Record metadata in smart contract
-                console.log("Sending transaction to blockchain...");
-                const tx = await this.contract.sendMessage(recipientHash, messageHash);
-                
-                // Wait for transaction to be mined
-                await tx.wait();
-                console.log("Transaction confirmed:", tx.hash);
-                
-                // Clear the form and show success message
-                this.messageInput.value = "";
-                this.showSuccess("Message Sent", "Your encrypted message has been sent!");
+                try {
+                    const result = await this.ipfs.add(JSON.stringify(messagePackage));
+                    const cid = result.path;
+                    console.log("IPFS CID:", cid);
+                    
+                    // Convert CID to bytes32 compatible format
+                    const messageHash = CryptoUtils.hashToBytes32(cid);
+                    
+                    // Record metadata in smart contract
+                    console.log("Sending transaction to blockchain...");
+                    console.log("Contract address:", CONFIG.CONTRACT.ADDRESS);
+                    console.log("Recipient hash:", recipientHash);
+                    console.log("Message hash:", messageHash);
+                    
+                    try {
+                        const tx = await this.contract.sendMessage(recipientHash, messageHash);
+                        console.log("Transaction submitted:", tx);
+                        
+                        // Wait for transaction to be mined
+                        const receipt = await tx.wait();
+                        console.log("Transaction confirmed:", receipt);
+                        
+                        // Clear the form and show success message
+                        this.messageInput.value = "";
+                        this.showSuccess("Message Sent", "Your encrypted message has been sent!");
+                    } catch (txError) {
+                        console.error("Transaction error:", txError);
+                        let errorMsg = "Failed to send the transaction.";
+                        
+                        if (txError.code === 'INSUFFICIENT_FUNDS') {
+                            errorMsg = "You don't have enough ETH to send this transaction. Please get some Sepolia testnet ETH from a faucet.";
+                        } else if (txError.code === 'UNPREDICTABLE_GAS_LIMIT') {
+                            errorMsg = "Contract error. Please check that you're connected to the correct network.";
+                        } else if (txError.message) {
+                            errorMsg += " " + txError.message;
+                        }
+                        
+                        this.showError("Transaction Failed", errorMsg);
+                    }
+                } catch (ipfsError) {
+                    console.error("IPFS error:", ipfsError);
+                    this.showError("IPFS Error", "Failed to upload message to IPFS: " + ipfsError.message);
+                }
             } catch (error) {
                 console.error("Send message error:", error);
-                this.showError("Send Failed", "Failed to send the message. Error: " + error.message);
+                this.showError("Send Failed", "Failed to send the message: " + error.message);
             } finally {
                 // Reset loading state
                 this.setSendingState(false);
@@ -508,38 +533,130 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Calculate the recipient hash for the current user
             const myRecipientHash = CryptoUtils.hashToBytes32(this.account);
+            console.log("My recipient hash:", myRecipientHash);
             
             // Hide loading and show no messages initially
             this.loadingMessages.style.display = 'none';
             this.noMessages.style.display = 'block';
             
-            // In a real application, you'd fetch past events here
-            // For the demo, we'll just listen for new ones
-            console.log("Listening for incoming messages...");
-            
-            // Listen for the MessageSent event
-            this.contract.on("MessageSent", async (sender, recipientHash, messageHash, timestamp, event) => {
-                console.log("Message event detected:", sender, recipientHash, messageHash);
-                
-                // Check if this message is for the current user
-                if (recipientHash === myRecipientHash) {
-                    console.log("New message for current user detected!");
-                    
+            try {
+                // In a real application, fetch past events
+                if (!this.demoMode) {
+                    console.log("Fetching past messages...");
                     try {
-                        // For demo purposes, we'll display some mock messages
-                        await this.displayMockMessage(sender, timestamp);
+                        // Query past MessageSent events where recipientHash matches the current user
+                        const filter = this.contract.filters.MessageSent(null, myRecipientHash);
+                        const events = await this.contract.queryFilter(filter, -10000); // Look back 10000 blocks
+                        
+                        console.log(`Found ${events.length} past messages`);
+                        
+                        if (events.length > 0) {
+                            this.noMessages.style.display = 'none';
+                            
+                            // Process each event
+                            for (const event of events) {
+                                const { sender, messageHash, timestamp } = event.args;
+                                await this.processMessage(sender, messageHash, timestamp);
+                            }
+                        }
                     } catch (error) {
-                        console.error("Error processing message:", error);
+                        console.error("Error fetching past messages:", error);
+                        this.showError("Message Error", "Failed to fetch past messages");
                     }
                 }
-            });
-            
-            // For demo, add some mock messages
-            if (this.demoMode) {
-                setTimeout(() => {
-                    this.displayMockMessage("0x71C7656EC7ab88b098defB751B7401B5f6d8976F", Date.now() - 3600000);
-                    this.displayMockMessage("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", Date.now() - 1800000);
-                }, 2000);
+                
+                // Listen for new MessageSent events
+                console.log("Listening for incoming messages...");
+                
+                this.contract.on("MessageSent", async (sender, recipientHash, messageHash, timestamp, event) => {
+                    console.log("Message event detected:", sender, recipientHash, messageHash);
+                    
+                    // Check if this message is for the current user
+                    if (recipientHash === myRecipientHash) {
+                        console.log("New message for current user detected!");
+                        
+                        try {
+                            if (this.demoMode) {
+                                // For demo purposes, display mock messages
+                                await this.displayMockMessage(sender, timestamp);
+                            } else {
+                                // In production mode, process the real message
+                                await this.processMessage(sender, messageHash, timestamp);
+                            }
+                        } catch (error) {
+                            console.error("Error processing message:", error);
+                        }
+                    }
+                });
+                
+                // For demo, add some mock messages
+                if (this.demoMode) {
+                    setTimeout(() => {
+                        this.displayMockMessage("0x71C7656EC7ab88b098defB751B7401B5f6d8976F", Date.now() - 3600000);
+                        this.displayMockMessage("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", Date.now() - 1800000);
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error("Error setting up message listener:", error);
+            }
+        },
+        
+        /**
+         * Process a real message from the blockchain
+         * @param {string} sender - Sender address
+         * @param {string} messageHash - IPFS CID hash
+         * @param {number} timestamp - Message timestamp
+         */
+        async processMessage(sender, messageHash, timestamp) {
+            try {
+                // In a real implementation, we would:
+                // 1. Fetch the encrypted message from IPFS using the messageHash
+                // 2. Decrypt the message using the recipient's private key
+                
+                // For this demo, we'll just show a placeholder
+                // Hide the "no messages" display if it's visible
+                this.noMessages.style.display = 'none';
+                
+                // Find sender name from CONFIG
+                let senderName = "Unknown User";
+                const senderObj = CONFIG.USERS.find(user => user.address.toLowerCase() === sender.toLowerCase());
+                if (senderObj) {
+                    senderName = senderObj.name;
+                }
+                
+                // Convert timestamp from BigNumber if needed
+                const timeValue = typeof timestamp === 'object' && timestamp.toNumber ? 
+                    timestamp.toNumber() * 1000 : // Convert from seconds to milliseconds
+                    Number(timestamp) * 1000;
+                    
+                // Format the timestamp
+                const date = new Date(timeValue);
+                const formattedDate = date.toLocaleString();
+                
+                // Create a message card
+                const card = document.createElement('div');
+                card.className = 'card message-card';
+                
+                // Set the card content with real message data
+                card.innerHTML = `
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <b>${senderName}</b>
+                            <small class="text-muted">(${sender.substring(0, 8)}...)</small>
+                        </div>
+                        <small class="text-muted">${formattedDate}</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <p class="card-text mb-0">Encrypted message received (IPFS hash: ${messageHash.substring(0, 10)}...)</p>
+                        </div>
+                    </div>
+                `;
+                
+                // Add the card to the messages list
+                this.messagesList.prepend(card);
+            } catch (error) {
+                console.error("Error processing message:", error);
             }
         },
         

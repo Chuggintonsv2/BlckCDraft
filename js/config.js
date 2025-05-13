@@ -5,7 +5,7 @@ const CONFIG = {
     // Contract details - For a real deployment, replace with your actual deployed contract details
     CONTRACT: {
         // Replace this with your deployed contract address once you've deployed it on Sepolia testnet
-        ADDRESS: "0x0000000000000000000000000000000000000000", // Replace with your deployed contract address
+        ADDRESS: "0xd9145CCE52D386f254917e481eB44e9943F39138", // Deployed contract address
         // ABI excerpt containing just the functions and events we need
         ABI: [
             {
@@ -96,9 +96,8 @@ const CONFIG = {
         CHAIN_ID: 11155111,
         // Network name for display
         NETWORK_NAME: "Sepolia",
-        // RPC URL for the testnet - This is a public Sepolia RPC endpoint
-        // For production, use your own Infura or Alchemy endpoint
-        RPC_URL: "https://eth-sepolia.g.alchemy.com/v2/demo"
+        // RPC URL for the testnet - This is a better public Sepolia RPC endpoint
+        RPC_URL: "https://ethereum-sepolia.publicnode.com"
     },
     
     // GitHub Pages URL - Update this with your actual GitHub Pages URL
@@ -106,7 +105,7 @@ const CONFIG = {
     
     // App configuration
     APP: {
-        // Set to false once your contract is deployed to use real functionality
+        // Set to false to use the real deployed contract
         DEMO_MODE: false,
         // Set to true to use a real IPFS implementation
         USE_REAL_IPFS: false
