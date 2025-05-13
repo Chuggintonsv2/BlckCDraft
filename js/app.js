@@ -2,6 +2,30 @@
  * Encrypted Messaging dApp - Main Application Logic
  */
 document.addEventListener('DOMContentLoaded', () => {
+    // Check if TweetNaCl is properly loaded
+    if (typeof nacl === 'undefined') {
+        alert('TweetNaCl library failed to load. Please check your internet connection and refresh the page.');
+        console.error('TweetNaCl library not found');
+        return;
+    }
+    
+    if (typeof nacl.util === 'undefined') {
+        alert('TweetNaCl utilities failed to load. Please check your internet connection and refresh the page.');
+        console.error('TweetNaCl utilities not found');
+        return;
+    }
+    
+    // Test the hex encoding functions
+    try {
+        const testBytes = new Uint8Array([1, 2, 3, 4]);
+        const testHex = nacl.util.encodeBase16(testBytes);
+        console.log("TweetNaCl hex encoding test passed:", testHex);
+    } catch (e) {
+        console.error("TweetNaCl hex encoding test failed:", e);
+        alert('TweetNaCl encryption functions are not working properly. Please refresh the page and try again.');
+        return;
+    }
+    
     const App = {
         // App state
         account: null,
@@ -163,15 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 option.dataset.address = user.address;
                 this.recipientSelect.appendChild(option);
             });
-            
-            // Update UI to show correct mode notice
-            const demoNotice = document.querySelector('.demo-notice');
-            
-            if (this.demoMode) {
-                demoNotice.style.display = 'block';
-            } else {
-                demoNotice.style.display = 'none';
-            }
         },
         
         /**

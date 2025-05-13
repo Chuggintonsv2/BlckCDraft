@@ -25,14 +25,10 @@
             font-size: 0.75rem;
         }
         .demo-notice {
-            background-color: #fff3cd;
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            border-left: 4px solid #ffc107;
+            display: none; /* Hide all notices */
         }
         .prod-notice {
-            display: none;  /* Hide this notice */
+            display: none; /* Hide all notices */
         }
     </style>
 </head>
@@ -45,16 +41,7 @@
                         <h4 class="mb-0">Encrypted Messaging dApp</h4>
                     </div>
                     <div class="card-body">
-                        <!-- Demo Notice -->
-                        <div class="demo-notice">
-                            <h5 class="text-warning mb-2">⚠️ Demo Mode</h5>
-                            <p class="mb-0">This application is running in demo mode. The smart contract is not deployed, and IPFS functionality is simulated. 
-                               To deploy the actual contract and switch to production mode, follow the instructions in the <a href="https://github.com/Chuggintonsv2/BlckCDraft" target="_blank">GitHub repository</a>.</p>
-                        </div>
-                        
-                        <!-- Production Notice - Hidden -->
-                        <div class="prod-notice"></div>
-
+                        <!-- All notices hidden -->
                         <div id="walletSection">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
@@ -131,8 +118,38 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl-fast.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
+    
+    <!-- TweetNaCl and utilities -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/nacl-fast.min.js" integrity="sha512-+kmY64TQMDgHiDBrvBDWg0GT32xlbYBa506uiKVLBN9UFQF5/wpIi5z6MiN0UQGcQ3W2exe3Fx1l7Xpfgcdf6g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl-util/0.15.1/nacl-util.min.js" integrity="sha512-l8ZlXTKWe2Ny5sNo8Q0xGnFLUbW9JvVYJUKRFeK+/Z3TlQxg19ank8qQmVP7LQDNI02d+RKr4XShCzYxGN7e7A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <!-- Make sure the utility functions are available -->
+    <script>
+        // Ensure nacl object exists
+        window.nacl = window.nacl || {};
+        
+        // Ensure nacl.util exists
+        window.nacl.util = window.nacl.util || {};
+        
+        // Add the hex encoding/decoding functions directly
+        window.nacl.util.encodeBase16 = function(bytes) {
+            return Array.from(bytes)
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+        };
+        
+        window.nacl.util.decodeBase16 = function(hexString) {
+            const str = hexString.toLowerCase();
+            const bytes = new Uint8Array(str.length / 2);
+            for (let i = 0; i < bytes.length; i++) {
+                bytes[i] = parseInt(str.substr(i * 2, 2), 16);
+            }
+            return bytes;
+        };
+        
+        console.log("TweetNaCl utilities loaded", window.nacl.util);
+    </script>
+    
     <script src="https://cdn.jsdelivr.net/npm/ipfs-http-client/dist/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <script src="js/crypto.js"></script>

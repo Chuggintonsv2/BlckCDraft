@@ -1,6 +1,34 @@
 /**
  * Crypto utilities for encryption and decryption using TweetNaCl
  */
+
+// First, ensure nacl.util functions are available as a fallback
+// This is a safety measure in case the inline script in index.html doesn't load
+if (typeof nacl !== 'undefined') {
+    if (!nacl.util) {
+        nacl.util = {};
+    }
+    
+    if (!nacl.util.encodeBase16) {
+        nacl.util.encodeBase16 = function(bytes) {
+            return Array.from(bytes)
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+        };
+    }
+    
+    if (!nacl.util.decodeBase16) {
+        nacl.util.decodeBase16 = function(hexString) {
+            const str = hexString.toLowerCase();
+            const bytes = new Uint8Array(str.length / 2);
+            for (let i = 0; i < bytes.length; i++) {
+                bytes[i] = parseInt(str.substr(i * 2, 2), 16);
+            }
+            return bytes;
+        };
+    }
+}
+
 const CryptoUtils = {
     /**
      * Implementation of hex encoding since nacl.util doesn't provide encodeBase16
@@ -33,6 +61,14 @@ const CryptoUtils = {
      * @returns {Uint8Array} - Resulting byte array
      */
     hexToUint8Array(hexString) {
+        // First try to use nacl.util if available, otherwise use our implementation
+        try {
+            if (nacl.util && typeof nacl.util.decodeBase16 === 'function') {
+                return nacl.util.decodeBase16(hexString.toLowerCase());
+            }
+        } catch (e) {
+            console.log("Using fallback hex decoder");
+        }
         return this.hexToBytes(hexString);
     },
 
@@ -42,6 +78,14 @@ const CryptoUtils = {
      * @returns {string} - Hex string
      */
     uint8ArrayToHex(bytes) {
+        // First try to use nacl.util if available, otherwise use our implementation
+        try {
+            if (nacl.util && typeof nacl.util.encodeBase16 === 'function') {
+                return nacl.util.encodeBase16(bytes).toLowerCase();
+            }
+        } catch (e) {
+            console.log("Using fallback hex encoder");
+        }
         return this.bytesToHex(bytes);
     },
 
