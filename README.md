@@ -1,4 +1,4 @@
-Encrypted Messaging dApp
+Encrypted Messaging dApp Project for Blockchain DLT Technologies (CS-3943) with Professor Kiani. By William Shi (ws2340).
 
 A dApp that allows users to send encrypted messages using MetaMask and IPFS, with message metadata stored on blockchain.
 
