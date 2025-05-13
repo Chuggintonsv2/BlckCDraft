@@ -98,5 +98,8 @@ const CONFIG = {
         NETWORK_NAME: "Sepolia",
         // RPC URL for the testnet - This is a public Sepolia RPC endpoint
         RPC_URL: "https://eth-sepolia.g.alchemy.com/v2/demo"
-    }
+    },
+    
+    // GitHub Pages URL - Update this with your actual GitHub Pages URL
+    PAGES_URL: "https://chuggintonsv2.github.io/BlckCDraft/"
 }; 
