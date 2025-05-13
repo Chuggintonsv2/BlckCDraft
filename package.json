@@ -1,0 +1,24 @@
+{
+  "name": "encrypted-messaging-dapp",
+  "version": "1.0.0",
+  "description": "A minimal decentralized messaging application with client-side encryption",
+  "main": "index.html",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "http-server -o",
+    "deploy": "node deploy-to-gh-pages.js"
+  },
+  "keywords": [
+    "dapp",
+    "ethereum",
+    "metamask",
+    "ipfs",
+    "encryption"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "gh-pages": "^5.0.0",
+    "http-server": "^14.1.1"
+  }
+} 
